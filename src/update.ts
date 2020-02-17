@@ -134,12 +134,10 @@ async function downloadServer (serverPath:string, serverName:string, version: st
 
   writer.on('finish', () => {
     console.log('Server download successful!')
-    // atom.notifications.addSuccess('Server download successful!')
     callback()
   })
   writer.on('error', () => {
     console.log('Unable to download binary')
-    // atom.notifications.addError(utils.format('Unable to download %s binary'), serverName)
   })
 }
 
@@ -156,9 +154,6 @@ export function installServerIfRequired (serverPath: string, serverInfo: Record<
       if (fs.existsSync(serverPath)) { fs.unlinkSync(serverPath) }
       await downloadServer(serverPath, serverName, serverInfo.latestVersion, serverInfo.triple, resolve)
         .catch((err) => {
-          // atom.notifications.addError(
-          //   util.format('Unable to download %s server', serverName)
-          // )
           console.error(err)
         })
     }
