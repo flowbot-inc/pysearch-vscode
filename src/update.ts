@@ -47,7 +47,6 @@ function getInstalledServerVersion (serverPath: string, serverName: string) {
   })
 }
 
-
 function getSysInfo () {
   const platform = (() => {
     switch (os.platform()) {
@@ -107,37 +106,38 @@ export async function getServerInfo (serverPath: string, serverName: string) {
 }
 
 async function downloadServer (serverPath:string, serverName:string, version: string, triple: string, callback: () => void) {
-  console.log(util.format('Downloading %s binary...', serverName))
+    // TODO change spinner
+    console.log(util.format('Downloading %s binary...', serverName))
 
-  const serverDir = path.join(__dirname, '../bin')
-  if (!fs.existsSync(serverDir)){
+    const serverDir = path.join(__dirname, '../bin')
+    if (!fs.existsSync(serverDir)){
       fs.mkdirSync(serverDir);
-  }
+    }
 
-  const url = util.format(
-    'https://%s.s3-us-west-2.amazonaws.com/bin/%s/%s/%s',
-    serverName,
-    version.replace(/\./g, '_'),
-    triple,
-    serverName
-  )
-  const writer = fs.createWriteStream(serverPath)
-  const response = await axios({
-    url,
-    method: 'GET',
-    responseType: 'stream',
-    responseEncoding: null
-  })
-  response.data.pipe(writer)
-  fs.chmodSync(serverPath, 755)
+    const url = util.format(
+      'https://%s.s3-us-west-2.amazonaws.com/bin/%s/%s/%s',
+      serverName,
+      version.replace(/\./g, '_'),
+      triple,
+      serverName
+    )
+    const writer = fs.createWriteStream(serverPath)
+    const response = await axios({
+      url,
+      method: 'GET',
+      responseType: 'stream',
+      responseEncoding: null
+    })
+    response.data.pipe(writer)
+    fs.chmodSync(serverPath, 755)
 
-  writer.on('finish', () => {
-    console.log('Server download successful!')
-    callback()
-  })
-  writer.on('error', () => {
-    console.log('Unable to download binary')
-  })
+    writer.on('finish', () => {
+      console.log('Server download successful!')
+      callback()
+    })
+    writer.on('error', () => {
+      console.log('Unable to download binary')
+    })
 }
 
 
@@ -151,10 +151,13 @@ export function installServerIfRequired (serverPath: string, serverInfo: Record<
       resolve()
     } else {
       if (fs.existsSync(serverPath)) { fs.unlinkSync(serverPath) }
-      await downloadServer(serverPath, serverName, serverInfo.latestVersion, serverInfo.triple, resolve)
+      await Promise.resolve(downloadServer(serverPath, serverName, serverInfo.latestVersion, serverInfo.triple, resolve)
         .catch((err) => {
-          console.error(err)
-        })
+          reject(err);
+          console.error(err);
+          return;
+        }));
+      resolve();
     }
-  })
+  });
 }
