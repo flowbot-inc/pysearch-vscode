@@ -27,6 +27,7 @@ import { checkForRls, ensureToolchain, rustupUpdate } from './rustup';
 import { startSpinner, stopSpinner } from './spinner';
 import { activateTaskProvider, Execution, runRlsCommand } from './tasks';
 import { getServerInfo, installServerIfRequired } from './update';
+import { checkPylsInstallation } from './pyls';
 import { withWsl } from './utils/child_process';
 import { uriWindowsToWsl, uriWslToWindows } from './utils/wslpath';
 import * as workspace_util from './workspace_util';
@@ -106,9 +107,14 @@ class ClientWorkspace {
   public async start(context: ExtensionContext) {
     startSpinner('PySearch', 'Starting');
 
+    const rlsPath = path.join(__dirname,  '../bin/pysearch');
+    const python = this.config.pythonPath;
+    const config = this.config.rustupConfig();
+    checkPylsInstallation(rlsPath, python, config)
+    .then(() => {
     const serverOptions: ServerOptions = async () => {
       await this.autoUpdate();
-      return this.makeRlsProcess();
+      return await this.makeRlsProcess();
     };
 
     const pattern = this.config.multiProjectEnabled
@@ -174,6 +180,7 @@ class ClientWorkspace {
         ',',
       ),
     );
+    });
   }
 
   public async stop() {
@@ -250,21 +257,19 @@ class ClientWorkspace {
   }
 
   private async makeRlsProcess(): Promise<child_process.ChildProcess> {
-    const rlsPath = path.join(__dirname,  '../bin/pysearch');
     const cwd = this.folder.uri.fsPath;
-
-    let childProcess: child_process.ChildProcess;
+    const rlsPath = path.join(__dirname,  '../bin/pysearch');
+    const python = this.config.pythonPath;
     const config = this.config.rustupConfig();
 
+    let childProcess: child_process.ChildProcess;
     const env = {};
-    // childProcess = withWsl(config.useWSL).spawn(
-    //   rlsPath, [
-    //     "-p", this.config.pythonPath,
-    //   ],
-    //   { env, cwd },
-    // );
-
-    childProcess = child_process.spawn(rlsPath, ['-p', this.config.pythonPath], { cwd, env });
+    childProcess = withWsl(config.useWSL).spawn(
+      rlsPath, [
+        "-p", python,
+      ],
+      { env, cwd },
+    );
 
     childProcess.on('error', (err: { code?: string; message: string }) => {
       if (err.code === 'ENOENT') {
@@ -280,11 +285,11 @@ class ClientWorkspace {
               Install by running\n\npip install python-language-server",
           );
       } else if (code !== 0 && signal == null) {
-        console.log(code);
         console.error("Unable to start pysearch");
         window.showWarningMessage("Unable to start pysearch");
       }
     });
+
 
 
     if (this.config.logToFile) {
@@ -307,7 +312,7 @@ class ClientWorkspace {
     const rlsPath = path.join(__dirname,  '../bin/pysearch');
     const serverInfo = await getServerInfo(rlsPath, "pysearch");
     getServerInfo(rlsPath, "pysearch")
-    .then(serverInfo => installServerIfRequired(rlsPath, serverInfo, "pysearch"))
+    .then(serverInfo => installServerIfRequired(rlsPath, serverInfo, "pysearch"));
   }
 }
 
