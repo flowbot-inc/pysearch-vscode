@@ -4,7 +4,6 @@ import * as os from 'os';
 import * as path from 'path';
 import * as util from 'util';
 const axios = require('axios').default;
-import { window } from 'vscode';
 
 
 function getVersionFrom (data: string) {
