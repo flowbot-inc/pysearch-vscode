@@ -4,6 +4,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as util from 'util';
 const axios = require('axios').default;
+import { window } from 'vscode';
+import { startSpinner, stopSpinner } from './spinner';
 
 
 function getVersionFrom (data: string) {
@@ -47,6 +49,7 @@ function getInstalledServerVersion (serverPath: string, serverName: string) {
   })
 }
 
+
 function getSysInfo () {
   const platform = (() => {
     switch (os.platform()) {
@@ -72,7 +75,7 @@ function getSysInfo () {
 
   const triple = util.format('%s-%s', architecture, platform)
   if (triple.includes('unsupported')) {
-    throw Error(util.format('Platform not supported (%s)', triple))
+    throw Error(`Platform not supported (${triple})`);
   }
 
   return triple
@@ -106,8 +109,9 @@ export async function getServerInfo (serverPath: string, serverName: string) {
 }
 
 async function downloadServer (serverPath:string, serverName:string, version: string, triple: string, callback: () => void) {
-    // TODO change spinner
-    console.log(util.format('Downloading %s binary...', serverName))
+  return new Promise(async (resolve, reject) => {
+    startSpinner('PySearch', 'Updating binary');
+    console.log('Updating PySearch binary...');
 
     const serverDir = path.join(__dirname, '../bin')
     if (!fs.existsSync(serverDir)){
@@ -132,32 +136,30 @@ async function downloadServer (serverPath:string, serverName:string, version: st
     fs.chmodSync(serverPath, 755)
 
     writer.on('finish', () => {
-      console.log('Server download successful!')
-      callback()
+      console.log('PySearch update successful!')
+      stopSpinner('PySearch');
+      resolve();
     })
     writer.on('error', () => {
-      console.log('Unable to download binary')
+      const err = 'Unable to update PySearch binary';
+      console.error(err);
+      window.showErrorMessage(err);
+      reject();
     })
+  })
 }
 
 
 export function installServerIfRequired (serverPath: string, serverInfo: Record<string, any>, serverName: string) {
-  return new Promise(async (resolve, reject) => {
-    if (
-      serverInfo &&
+  return new Promise((resolve, reject) => {
+      resolve( serverInfo &&
       serverInfo.latestSize === serverInfo.installedServerSize &&
-      serverInfo.latestVersion === serverInfo.installedServerVersion
-    ) {
-      resolve()
-    } else {
+      serverInfo.latestVersion === serverInfo.installedServerVersion)
+  })
+  .then(async (serverIsInstalled) => {
+    if (!serverIsInstalled) {
       if (fs.existsSync(serverPath)) { fs.unlinkSync(serverPath) }
-      await Promise.resolve(downloadServer(serverPath, serverName, serverInfo.latestVersion, serverInfo.triple, resolve)
-        .catch((err) => {
-          reject(err);
-          console.error(err);
-          return;
-        }));
-      resolve();
+      await downloadServer(serverPath, serverName, serverInfo.latestVersion, serverInfo.triple,() => {})
     }
-  });
+  })
 }

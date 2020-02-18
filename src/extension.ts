@@ -112,7 +112,7 @@ class ClientWorkspace {
     const config = this.config.rustupConfig();
 
     this.autoUpdate()
-    .then(() => checkPylsInstallation(rlsPath, python, config))
+    .then(() => { checkPylsInstallation(rlsPath, python, config) })
     .then(() => {
       const serverOptions: ServerOptions = async () => {
         return await this.makeRlsProcess();
@@ -230,7 +230,7 @@ class ClientWorkspace {
 
     const runningProgress: Set<string> = new Set();
     await this.lc.onReady();
-    stopSpinner('RLS');
+    stopSpinner('PySearch');
 
     this.lc.onNotification(
       new NotificationType<ProgressParams, void>('window/progress'),
@@ -249,9 +249,9 @@ class ClientWorkspace {
           } else if (progress.title) {
             status = `[${progress.title.toLowerCase()}]`;
           }
-          startSpinner('RLS', status);
+          startSpinner('PySearch', status);
         } else {
-          stopSpinner('RLS');
+          stopSpinner('PySearch');
         }
       },
     );
@@ -310,12 +310,9 @@ class ClientWorkspace {
   }
 
   private async autoUpdate() {
-    return new Promise((resolve, reject) => {
-      const rlsPath = path.join(__dirname,  '../bin/pysearch');
-      getServerInfo(rlsPath, "pysearch")
-      .then(serverInfo => {installServerIfRequired(rlsPath, serverInfo, "pysearch")});
-      resolve()
-    });
+    const rlsPath = path.join(__dirname,  '../bin/pysearch');
+    return getServerInfo(rlsPath, "pysearch")
+      .then(async serverInfo => {await installServerIfRequired(rlsPath, serverInfo, "pysearch")})
   }
 }
 
