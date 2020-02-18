@@ -110,76 +110,77 @@ class ClientWorkspace {
     const rlsPath = path.join(__dirname,  '../bin/pysearch');
     const python = this.config.pythonPath;
     const config = this.config.rustupConfig();
-    checkPylsInstallation(rlsPath, python, config)
+
+    this.autoUpdate()
+    .then(() => { checkPylsInstallation(rlsPath, python, config) })
     .then(() => {
-    const serverOptions: ServerOptions = async () => {
-      await this.autoUpdate();
-      return await this.makeRlsProcess();
-    };
-
-    const pattern = this.config.multiProjectEnabled
-      ? `${this.folder.uri.path}/**`
-      : undefined;
-    const collectionName = this.config.multiProjectEnabled
-      ? `python ${this.folder.uri.toString()}`
-      : 'python';
-    const clientOptions: LanguageClientOptions = {
-      documentSelector: [
-        { language: 'python', scheme: 'file', pattern },
-        { language: 'python', scheme: 'untitled', pattern },
-      ],
-      diagnosticCollectionName: collectionName,
-      synchronize: { configurationSection: 'python' },
-      // Controls when to focus the channel rather than when to reveal it in the drop-down list
-      revealOutputChannelOn: this.config.revealOutputChannelOn,
-      initializationOptions: {
-        omitInitBuild: true,
-        cmdRun: true,
-      },
-      workspaceFolder: this.folder,
-    };
-
-    // Changes paths between Windows and Windows Subsystem for Linux
-    if (this.config.useWSL) {
-      clientOptions.uriConverters = {
-        code2Protocol: (uri: Uri) => {
-          const res = Uri.file(uriWindowsToWsl(uri.fsPath)).toString();
-          console.log(`code2Protocol for path ${uri.fsPath} -> ${res}`);
-          return res;
-        },
-        protocol2Code: (wslUri: string) => {
-          const urlDecodedPath = Uri.parse(wslUri).path;
-          const winPath = Uri.file(uriWslToWindows(urlDecodedPath));
-          console.log(`protocol2Code for path ${wslUri} -> ${winPath.fsPath}`);
-          return winPath;
-        },
+      const serverOptions: ServerOptions = async () => {
+        return await this.makeRlsProcess();
       };
-    }
 
-    // Create the language client and start the client.
-    this.lc = new LanguageClient(
-      'rust-client',
-      'Rust Language Server',
-      serverOptions,
-      clientOptions,
-    );
+      const pattern = this.config.multiProjectEnabled
+        ? `${this.folder.uri.path}/**`
+        : undefined;
+      const collectionName = this.config.multiProjectEnabled
+        ? `python ${this.folder.uri.toString()}`
+        : 'python';
+      const clientOptions: LanguageClientOptions = {
+        documentSelector: [
+          { language: 'python', scheme: 'file', pattern },
+          { language: 'python', scheme: 'untitled', pattern },
+        ],
+        diagnosticCollectionName: collectionName,
+        synchronize: { configurationSection: 'python' },
+        // Controls when to focus the channel rather than when to reveal it in the drop-down list
+        revealOutputChannelOn: this.config.revealOutputChannelOn,
+        initializationOptions: {
+          omitInitBuild: true,
+          cmdRun: true,
+        },
+        workspaceFolder: this.folder,
+      };
 
-    const selector = this.config.multiProjectEnabled
-      ? { language: 'python', scheme: 'file', pattern }
-      : { language: 'python' };
+      // Changes paths between Windows and Windows Subsystem for Linux
+      if (this.config.useWSL) {
+        clientOptions.uriConverters = {
+          code2Protocol: (uri: Uri) => {
+            const res = Uri.file(uriWindowsToWsl(uri.fsPath)).toString();
+            console.log(`code2Protocol for path ${uri.fsPath} -> ${res}`);
+            return res;
+          },
+          protocol2Code: (wslUri: string) => {
+            const urlDecodedPath = Uri.parse(wslUri).path;
+            const winPath = Uri.file(uriWslToWindows(urlDecodedPath));
+            console.log(`protocol2Code for path ${wslUri} -> ${winPath.fsPath}`);
+            return winPath;
+          },
+        };
+      }
 
-    this.setupProgressCounter();
-    this.registerCommands(context, this.config.multiProjectEnabled);
-    this.disposables.push(activateTaskProvider(this.folder));
-    this.disposables.push(this.lc.start());
-    this.disposables.push(
-      languages.registerSignatureHelpProvider(
-        selector,
-        new SignatureHelpProvider(this.lc),
-        '(',
-        ',',
-      ),
-    );
+      // Create the language client and start the client.
+      this.lc = new LanguageClient(
+        'rust-client',
+        'Rust Language Server',
+        serverOptions,
+        clientOptions,
+      );
+
+      const selector = this.config.multiProjectEnabled
+        ? { language: 'python', scheme: 'file', pattern }
+        : { language: 'python' };
+
+      this.setupProgressCounter();
+      this.registerCommands(context, this.config.multiProjectEnabled);
+      this.disposables.push(activateTaskProvider(this.folder));
+      this.disposables.push(this.lc.start());
+      this.disposables.push(
+        languages.registerSignatureHelpProvider(
+          selector,
+          new SignatureHelpProvider(this.lc),
+          '(',
+          ',',
+        ),
+      );
     });
   }
 
@@ -229,7 +230,7 @@ class ClientWorkspace {
 
     const runningProgress: Set<string> = new Set();
     await this.lc.onReady();
-    stopSpinner('RLS');
+    stopSpinner('PySearch');
 
     this.lc.onNotification(
       new NotificationType<ProgressParams, void>('window/progress'),
@@ -248,9 +249,9 @@ class ClientWorkspace {
           } else if (progress.title) {
             status = `[${progress.title.toLowerCase()}]`;
           }
-          startSpinner('RLS', status);
+          startSpinner('PySearch', status);
         } else {
-          stopSpinner('RLS');
+          stopSpinner('PySearch');
         }
       },
     );
@@ -310,9 +311,8 @@ class ClientWorkspace {
 
   private async autoUpdate() {
     const rlsPath = path.join(__dirname,  '../bin/pysearch');
-    const serverInfo = await getServerInfo(rlsPath, "pysearch");
-    getServerInfo(rlsPath, "pysearch")
-    .then(serverInfo => installServerIfRequired(rlsPath, serverInfo, "pysearch"));
+    return getServerInfo(rlsPath, "pysearch")
+      .then(async serverInfo => {await installServerIfRequired(rlsPath, serverInfo, "pysearch")})
   }
 }
 

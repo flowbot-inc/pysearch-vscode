@@ -4,6 +4,8 @@ import * as os from 'os';
 import * as path from 'path';
 import * as util from 'util';
 const axios = require('axios').default;
+import { window } from 'vscode';
+import { startSpinner, stopSpinner } from './spinner';
 
 
 function getVersionFrom (data: string) {
@@ -73,7 +75,7 @@ function getSysInfo () {
 
   const triple = util.format('%s-%s', architecture, platform)
   if (triple.includes('unsupported')) {
-    throw Error(util.format('Platform not supported (%s)', triple))
+    throw Error(`Platform not supported (${triple})`);
   }
 
   return triple
@@ -107,54 +109,57 @@ export async function getServerInfo (serverPath: string, serverName: string) {
 }
 
 async function downloadServer (serverPath:string, serverName:string, version: string, triple: string, callback: () => void) {
-  console.log(util.format('Downloading %s binary...', serverName))
+  return new Promise(async (resolve, reject) => {
+    startSpinner('PySearch', 'Updating binary');
+    console.log('Updating PySearch binary...');
 
-  const serverDir = path.join(__dirname, '../bin')
-  if (!fs.existsSync(serverDir)){
+    const serverDir = path.join(__dirname, '../bin')
+    if (!fs.existsSync(serverDir)){
       fs.mkdirSync(serverDir);
-  }
+    }
 
-  const url = util.format(
-    'https://%s.s3-us-west-2.amazonaws.com/bin/%s/%s/%s',
-    serverName,
-    version.replace(/\./g, '_'),
-    triple,
-    serverName
-  )
-  const writer = fs.createWriteStream(serverPath)
-  const response = await axios({
-    url,
-    method: 'GET',
-    responseType: 'stream',
-    responseEncoding: null
-  })
-  response.data.pipe(writer)
-  fs.chmodSync(serverPath, 755)
+    const url = util.format(
+      'https://%s.s3-us-west-2.amazonaws.com/bin/%s/%s/%s',
+      serverName,
+      version.replace(/\./g, '_'),
+      triple,
+      serverName
+    )
+    const writer = fs.createWriteStream(serverPath)
+    const response = await axios({
+      url,
+      method: 'GET',
+      responseType: 'stream',
+      responseEncoding: null
+    })
+    response.data.pipe(writer)
+    fs.chmodSync(serverPath, 755)
 
-  writer.on('finish', () => {
-    console.log('Server download successful!')
-    callback()
-  })
-  writer.on('error', () => {
-    console.log('Unable to download binary')
+    writer.on('finish', () => {
+      console.log('PySearch update successful!')
+      stopSpinner('PySearch');
+      resolve();
+    })
+    writer.on('error', () => {
+      const err = 'Unable to update PySearch binary';
+      console.error(err);
+      window.showErrorMessage(err);
+      reject();
+    })
   })
 }
 
 
 export function installServerIfRequired (serverPath: string, serverInfo: Record<string, any>, serverName: string) {
-  return new Promise(async (resolve, reject) => {
-    if (
-      serverInfo &&
+  return new Promise((resolve, reject) => {
+      resolve( serverInfo &&
       serverInfo.latestSize === serverInfo.installedServerSize &&
-      serverInfo.latestVersion === serverInfo.installedServerVersion
-    ) {
-      resolve()
-    } else {
+      serverInfo.latestVersion === serverInfo.installedServerVersion)
+  })
+  .then(async (serverIsInstalled) => {
+    if (!serverIsInstalled) {
       if (fs.existsSync(serverPath)) { fs.unlinkSync(serverPath) }
-      await downloadServer(serverPath, serverName, serverInfo.latestVersion, serverInfo.triple, resolve)
-        .catch((err) => {
-          console.error(err)
-        })
+      await downloadServer(serverPath, serverName, serverInfo.latestVersion, serverInfo.triple,() => {})
     }
   })
 }
