@@ -112,7 +112,7 @@ class ClientWorkspace {
     const config = this.config.rustupConfig();
 
     this.autoUpdate()
-    .then(() => { checkPylsInstallation(rlsPath, python, config) })
+    .then(async () => { await checkPylsInstallation(rlsPath, python, config) })
     .then(() => {
       const serverOptions: ServerOptions = async () => {
         return await this.makeRlsProcess();
