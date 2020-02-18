@@ -32,7 +32,7 @@ export async function checkPylsInstallation(serverPath: string, python: string, 
           return;
         }
         case 8: {
-          const err = util.format("'%s' is an invalid python runtime.", python);
+          const err = `${python} is an invalid python runtime.`;
           window.showErrorMessage(err);
           reject();
           return;

@@ -108,7 +108,7 @@ class ClientWorkspace {
     startSpinner('PySearch', 'Starting');
 
     const rlsPath = path.join(__dirname,  '../bin/pysearch');
-    const python = this.config.pythonPath;
+    const python = this.config.pythonPath ? this.config.pythonPath : "python3";
     const config = this.config.rustupConfig();
 
     this.autoUpdate()
@@ -260,7 +260,7 @@ class ClientWorkspace {
   private async makeRlsProcess(): Promise<child_process.ChildProcess> {
     const cwd = this.folder.uri.fsPath;
     const rlsPath = path.join(__dirname,  '../bin/pysearch');
-    const python = this.config.pythonPath;
+    const python = this.config.pythonPath ? this.config.pythonPath : "python3";
     const config = this.config.rustupConfig();
 
     let childProcess: child_process.ChildProcess;
