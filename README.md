@@ -26,7 +26,7 @@ Because we're in beta, the service is free for a limited number of users.
 To make a PySearch query, type the delimiter (`!!` *by default, but user-configurable*) to begin a search:
 
 
-<img src="docs/images/cosine_distance.png" alt="cd3">
+<img src="https://raw.githubusercontent.com/l-zone-dev/pysearch-vscode/master/docs/images/cosine_distance.png" alt="cd3">
 
 
 For more control over query results, try adding the `--context` flag (alias `-c`) anywhere in your query
@@ -34,7 +34,7 @@ to scale context sensitivity.
 
 The `--context` flag takes integer values from `0` through `5`, where higher numbers increase context sensitivity.
 
-<img src="docs/images/cosine_distance_c0.png" alt="cd0">
+<img src="https://raw.githubusercontent.com/l-zone-dev/pysearch-vscode/master/docs/images/cosine_distance_c0.png" alt="cd0">
 
 While PySearch searches only functions across Python 3.7+, broader coverage is currently in alpha. Our search indexes are hosted in PySearch Cloud, and we're actively working on rolling out a local version. All requests are TLS/SSL encrypted, anonymized, and **never** sold or shared.
 
