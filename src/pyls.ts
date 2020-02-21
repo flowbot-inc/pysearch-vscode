@@ -20,7 +20,7 @@ export async function checkPylsInstallation(serverPath: string, python: string, 
         }
         case 7: {
           const clicked = await Promise.resolve(
-            window.showInformationMessage('Pyls is not installed. Install with pip?', 'Yes'),
+            window.showInformationMessage(`Pyls is not installed. Install with pip at ${python}?`, 'Yes'),
           );
           if (clicked) {
             await installPyls(python, config);
