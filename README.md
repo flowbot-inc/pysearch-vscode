@@ -4,8 +4,6 @@
 
 **PySearch** provides intelligent completion suggestions that improve on ordinary Google search, by incorporating the context surrounding each query and learning on the fly.
 
-Because we're in beta, the service is free for a limited number of users.
-
 
 ## Getting Started:
 
