@@ -66,7 +66,7 @@ While PySearch searches only functions across Python 3.7+, broader coverage is c
 
 <img src="https://raw.githubusercontent.com/flowbot-inc/pysearch-vscode/master/docs/images/server_log.png" alt="troubleshooting1">
 
-2. VScode uses events to trigger the server startup process, so try reloading the window
+2. VScode uses events to trigger the server startup process, so try reloading the window if you aren't getting PySearch results (as the server may never have been triggered, or pyls may have died)
 
   `View -> Command Palate -> Developer: Reload Window`
 
