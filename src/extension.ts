@@ -286,14 +286,16 @@ class ClientWorkspace {
 
     childProcess.on("close", (code, signal) => {
       if (code === 101 && signal == null) {
+        stopSpinner(`PySearch Failed: (${code}).`);
         console.error("Unable to start a python language server.");
         window.showWarningMessage("Unable to start a python language server.\n\
               Install by running\n\npip install python-language-server",
           );
       } else if (code !== 0 && signal == null) {
+        stopSpinner(`PySearch Failed (${code}).`);
         console.error("Unable to start pysearch");
         console.error(`exited with ${code}`)
-        window.showWarningMessage("Unable to start pysearch");
+        window.showErrorMessage("Unable to start pysearch");
       }
     });
 
