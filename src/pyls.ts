@@ -34,6 +34,7 @@ export async function checkAccessToken(serverPath: string, accessToken: string, 
         }
         default: {
           window.showErrorMessage(`PySearch failed with unknown error code ${code}.\n Please report this error to founders@getflowbot.com`);
+          stopSpinner(`PySearch Failed: Error code ${code}`);
           reject();
           return;
         }
@@ -68,12 +69,14 @@ export async function checkPylsInstallation(serverPath: string, python: string, 
         case 8: {
           const err = `${python} is an invalid python runtime.`;
           window.showErrorMessage(err);
+          stopSpinner(`PySearch Failed: Invalid python runtime`);
           reject();
           return;
         }
         default: {
           const err = util.format("Check for pyls exited with unknown error", python);
           console.log(err)
+          stopSpinner(`PySearch Failed: Unable to find pyls.`);
           reject();
           return;
         }
