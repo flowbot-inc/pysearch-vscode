@@ -91,8 +91,8 @@ export class RLSConfiguration {
     return this.configuration.get<string>('pythonPath', 'python3');
   }
 
-  public get fuzz(): number {
-    return this.configuration.get<number>('fuzz', 3);
+  public get accessToken(): string {
+    return this.configuration.get<string>('accessToken', '');
   }
 
   public get rustupDisabled(): boolean {

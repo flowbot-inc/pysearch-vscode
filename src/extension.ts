@@ -27,7 +27,7 @@ import { checkForRls, ensureToolchain, rustupUpdate } from './rustup';
 import { startSpinner, stopSpinner } from './spinner';
 import { activateTaskProvider, Execution, runRlsCommand } from './tasks';
 import { getServerInfo, installServerIfRequired } from './update';
-import { checkPylsInstallation } from './pyls';
+import { checkPylsInstallation, checkAccessToken } from './pyls';
 import { withWsl } from './utils/child_process';
 import { uriWindowsToWsl, uriWslToWindows } from './utils/wslpath';
 import * as workspace_util from './workspace_util';
@@ -108,14 +108,17 @@ class ClientWorkspace {
     startSpinner('PySearch', 'Starting');
 
     const rlsPath = path.join(__dirname,  '../bin/pysearch');
-    const python = this.config.pythonPath ? this.config.pythonPath : "python3";
+    const py_runtime = this.config.pythonPath ? this.config.pythonPath : "python3";
+    const accessToken = this.config.accessToken;
+
     const config = this.config.rustupConfig();
 
-    this.autoUpdate()
-    .then(async () => { await checkPylsInstallation(rlsPath, python, config) })
+    this.autoUpdate(rlsPath)
+    .then(async () => { await checkPylsInstallation(rlsPath, py_runtime, config) })
+    .then(async () => { await checkAccessToken(rlsPath, accessToken, config) })
     .then(() => {
       const serverOptions: ServerOptions = async () => {
-        return await this.makeRlsProcess();
+        return await this.makeRlsProcess(rlsPath, py_runtime, accessToken);
       };
 
       const pattern = this.config.multiProjectEnabled
@@ -257,18 +260,20 @@ class ClientWorkspace {
     );
   }
 
-  private async makeRlsProcess(): Promise<child_process.ChildProcess> {
+  private async makeRlsProcess(rlsPath: string, py_runtime: string, accessToken: string): Promise<child_process.ChildProcess> {
     const cwd = this.folder.uri.fsPath;
-    const rlsPath = path.join(__dirname,  '../bin/pysearch');
-    const python = this.config.pythonPath ? this.config.pythonPath : "python3";
     const config = this.config.rustupConfig();
 
     let childProcess: child_process.ChildProcess;
     const env = {};
+
+    var pysearchArgs = ["-p", py_runtime];
+    if (accessToken) {
+        pysearchArgs.push("-t", accessToken)
+    }
     childProcess = withWsl(config.useWSL).spawn(
-      rlsPath, [
-        "-p", python,
-      ],
+      rlsPath,
+      pysearchArgs,
       { env, cwd },
     );
 
@@ -287,6 +292,7 @@ class ClientWorkspace {
           );
       } else if (code !== 0 && signal == null) {
         console.error("Unable to start pysearch");
+        console.error(`exited with ${code}`)
         window.showWarningMessage("Unable to start pysearch");
       }
     });
@@ -309,10 +315,9 @@ class ClientWorkspace {
     return childProcess;
   }
 
-  private async autoUpdate() {
-    const rlsPath = path.join(__dirname,  '../bin/pysearch');
-    return getServerInfo(rlsPath, "pysearch")
-      .then(async serverInfo => {await installServerIfRequired(rlsPath, serverInfo, "pysearch")})
+  private async autoUpdate(pysearchPath: string) {
+    return getServerInfo(pysearchPath, "pysearch")
+      .then(async serverInfo => {await installServerIfRequired(pysearchPath, serverInfo, "pysearch")})
   }
 }
 

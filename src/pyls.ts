@@ -9,6 +9,40 @@ import { startSpinner, stopSpinner } from './spinner';
 import { RustupConfig } from './rustup'
 import { withWsl } from './utils/child_process';
 
+export async function checkAccessToken(serverPath: string, accessToken: string, config: RustupConfig) {
+  return new Promise((resolve, reject) => {
+    if (!accessToken) {
+      resolve()
+      return;
+    }
+    const childProcess = cp.spawn(serverPath, ['--check', '-t', accessToken]);
+    childProcess.on("exit", (code, signal) => {
+      switch (code) {
+        case 0: {
+          resolve();
+          return;
+        }
+        case 9:
+        case 10:
+        case 11: {
+          const err = "Invalid PySearch access token."
+          stopSpinner('PySearch Failed: Invalid Access Token');
+          console.error(`${err} (error code: ${code})`)
+          window.showErrorMessage(`${err} Check your PySearch config and reload your window to continue.`);
+          reject();
+          return;
+        }
+        default: {
+          window.showErrorMessage(`PySearch failed with unknown error code ${code}.\n Please report this error to founders@getflowbot.com`);
+          reject();
+          return;
+        }
+      }
+    });
+  });
+}
+
+
 export async function checkPylsInstallation(serverPath: string, python: string, config: RustupConfig) {
   return new Promise((resolve, reject) => {
     const childProcess = cp.spawn(serverPath, ['--check', '-p', python]);
