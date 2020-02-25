@@ -93,7 +93,7 @@ async function installPyls(py_runtime: string, config: RustupConfig) {
       '-m',
       'pip',
       'install',
-      'python-language-server[all]',
+      'python-language-server\[all\]',
     ]);
     await runTaskCommand({ command, args }, 'Installing python language server…');
   } catch (e) {
