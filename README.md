@@ -9,7 +9,7 @@
 
 0. (Optional) Add your python runtime to the PySearch config.
 
-  `View -> Command Palate -> Preferences: Open User Settings -> Extensions -> PySearch`
+  `View -> Command Palette -> Preferences: Open User Settings -> Extensions -> PySearch`
 
 <img src="https://raw.githubusercontent.com/flowbot-inc/pysearch-vscode/master/docs/images/add_env.png" alt="getstarted0">
 
@@ -31,7 +31,7 @@
 
   Run `pip install python-language-server` in the command-line
 
-  `View -> Command Palate -> Developer: Reload Window`
+  `View -> Command Palette -> Developer: Reload Window`
 
 <img src="https://raw.githubusercontent.com/flowbot-inc/pysearch-vscode/master/docs/images/open_file.png" alt="getstarted3">
 
@@ -68,7 +68,7 @@ While PySearch searches only functions across Python 3.7+, broader coverage is c
 
 2. VScode uses events to trigger the server startup process, so try reloading the window if you aren't getting PySearch results (as the server may never have been triggered, or pyls may have died)
 
-  `View -> Command Palate -> Developer: Reload Window`
+  `View -> Command Palette -> Developer: Reload Window`
 
 3. If the server startup isn't initiated upon reloading, you may not have opened your Python file in an active workspace (see "Getting Started" step #1)
 
