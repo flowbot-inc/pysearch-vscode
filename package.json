@@ -25,7 +25,7 @@
 				"logToFile": {
 					"type": "boolean",
 					"default": false,
-					"description": "When set to true, stderr and stdout is logged to a file at workspace root level. Requires reloading extension after change."
+					"description": "When set to true, stderr and stdout are logged to files at workspace root level. Requires reloading extension after change."
 				},
 				"pythonPath": {
 					"scope": "resource",

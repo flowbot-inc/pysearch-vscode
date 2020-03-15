@@ -46,6 +46,7 @@ To make a PySearch query, type the delimiter (`!!` *by default, but user-configu
 
 <img src="https://raw.githubusercontent.com/flowbot-inc/pysearch-vscode/master/docs/images/cosine_distance.png" alt="cd3">
 
+(Note that in VScode you can use `ctrl + space` to toggle documentation)
 
 For more control over query results, try adding the `--context` flag (alias `-c`) anywhere in your query
 to scale context sensitivity.
